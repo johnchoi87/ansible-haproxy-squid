@@ -1,0 +1,1 @@
+{"rsync":{"/vagrant":{"type":"rsync","guestpath":"/vagrant","hostpath":"/Users/junew87/github/ansible-haproxy-squid/virtual-env","disabled":false,"__vagrantfile":true,"owner":"vagrant","group":"vagrant"}}}

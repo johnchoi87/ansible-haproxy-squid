@@ -1,0 +1,51 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+    #proxy-testbed001
+    config.vm.define "proxy-testbed001" do |cfg|
+        cfg.vm.box = "centos/7"
+        cfg.vm.provider "virtualbox" do |vb|
+            vb.name = "proxy-testbed001"
+        end
+        cfg.vm.host_name = "proxy-testbed001"
+        cfg.vm.network "public_network", ip: "192.168.2.1"
+        cfg.vm.network "forwarded_port", guest: 22, host: 60001, auto_correct: true, id: "ssh"
+        cfg.vm.network "forwarded_port", guest: 80, host: 60081, auto_correct: true
+        cfg.vm.synced_folder "../shared_data", "/shared_data", disabled: true
+        cfg.vm.provision "shell", path: "enable_ssh_password_auth.sh"
+    end
+
+    #proxy-testbed002
+    config.vm.define "proxy-testbed002" do |cfg|
+        cfg.vm.box = "centos/7"
+        cfg.vm.provider "virtualbox" do |vb|
+            vb.name = "proxy-testbed002"
+        end
+        cfg.vm.host_name = "proxy-testbed002"
+        cfg.vm.network "public_network", ip: "192.168.2.2"
+        cfg.vm.network "forwarded_port", guest: 3306, host: 13306, auto_correct: true
+        cfg.vm.synced_folder "../shared_data", "/shared_data", disabled: true
+        cfg.vm.provision "shell", path: "enable_ssh_password_auth.sh"
+    end
+
+    #ansible-server
+    config.vm.define "proxy-ansible-server" do |cfg|
+        cfg.vm.box = "centos/7"
+        cfg.vm.provider "virtualbox" do |vb|
+            vb.name="proxy-ansible-server"
+        end
+        cfg.vm.host_name = "proxy-ansible-server"
+        cfg.vm.network "public_network", ip: "192.168.2.10"
+        cfg.vm.network "forwarded_port", guest: 22, host: 60010, auto_correct: true, id: "ssh"
+        cfg.vm.synced_folder "../shared_data", "/shared_data", disabled: true
+        cfg.vm.provision "shell", inline: "yum install epel-release -y"
+        cfg.vm.provision "shell", inline: "yum install ansible -y"
+        cfg.vm.provision "shell", inline: "yum install tree -y"
+        cfg.vm.provision "file", source: "setup-ansible-env.yml", destination: "setup-ansible-env.yml"
+        cfg.vm.provision "shell", inline: "ansible-playbook setup-ansible-env.yml"
+        cfg.vm.provision "file", source: "auto_ssh_connect.yml", destination: "auto_ssh_connect.yml"
+        cfg.vm.provision "shell", inline: "ansible-playbook auto_ssh_connect.yml", privileged: false
+    end
+end
